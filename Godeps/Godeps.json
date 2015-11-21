@@ -1,0 +1,64 @@
+{
+	"ImportPath": "github.com/jtblin/aws-mock-metadata",
+	"GoVersion": "go1.5",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.6-9-g27b713c",
+			"Rev": "27b713cfd2742876645e3692a488c5e3fd65361d"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/endpoints",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/signer/v4",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/sts",
+			"Comment": "v1.0.0-1-g328e030",
+			"Rev": "328e030f73f66922cb9c1357de794ee1bf0ca2b5"
+		},
+		{
+			"ImportPath": "github.com/go-ini/ini",
+			"Comment": "v0-54-g2e44421",
+			"Rev": "2e44421e256d82ebbf3d4d4fcabe8930b905eff3"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "ee1815431e497d3850809578c93ab6705f1a19f7"
+		},
+		{
+			"ImportPath": "github.com/jmespath/go-jmespath",
+			"Comment": "0.2.2",
+			"Rev": "3433f3ea46d9f8019119e7dd41274e112a2359a9"
+		}
+	]
+}

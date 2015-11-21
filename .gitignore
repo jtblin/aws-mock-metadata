@@ -1,0 +1,3 @@
+bin/aws-mock-metadata*
+bin/pf.conf
+.env
