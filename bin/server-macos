@@ -27,7 +27,8 @@ EOF
 fi
 
 echo "Running AWS mock metadata service"
-APP_PORT=${APP_PORT} $(dirname $0)/aws-mock-metadata "${@}"
+$(dirname $0)/aws-mock-metadata --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
+		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT) "${@}"
 
 echo
 echo "Removing redirect ${APP_HOST} port 80 => ${APP_PORT}"

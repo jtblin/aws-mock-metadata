@@ -12,8 +12,9 @@ create this one.
 
 ## Docker quick start
 
-	docker run -it --rm -p 80:$(APP_PORT) -e APP_PORT=$(APP_PORT) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
-    		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) jtblin/aws-mock-metadata
+	docker run -it --rm -p 80:8080 -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+    		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) jtblin/aws-mock-metadata \
+    		--availability-zone=<az> --instance-id=<id> --hostname=<name> --role-name=<role> --role-arn=<arn>
 
 In your other docker image, install iptables and have a startup script that point 169.254.169.254 to the docker host
 before starting your program:
@@ -26,10 +27,22 @@ before starting your program:
 
 Set the following environment variables or create a .env file with the following information:
 
-* `APP_PORT`: port to run the container on (default 8080)
 * `AWS_ACCESS_KEY_ID`: aws access key
 * `AWS_SECRET_ACCESS_KEY`: aws secret access key
+
+Command line arguments:
+
+* `APP_PORT`: port to run the container on (default 8080)
 * `AWS_SESSION_TOKEN`: aws session token (optional)
+* `AVAILABILITY_ZONE`: ec2 availability zone e.g. ap-southeast-2 (optional)
+* `INSTANCE_ID`: ec2 instance id (optional)
+* `HOSTNAME`: ec2 hostname (optional)
+* `ROLE_NAME`: ec2 role name assigned to the instance (optional)
+* `ROLE_ARN`: arn for the role to assume to generate temporary credentials (optional)
+
+**Note**: you will need to have `sts:AssumeRole` for the role that you want to use to generate temporary credentials.
+The role also needs to have a trust relationship with the account that you use to assume the role, see
+http://stackoverflow.com/questions/21956794/aws-assumerole-authorization-not-working/33850060#33850060.
 
 ### Dependencies
 
@@ -53,7 +66,3 @@ Run it on 169.254.169.254 on Mac OSX or linux.
 Run in docker
 
 	make docker run-docker
-
-## TODO
-
-* Pass values for endpoints via command line arguments

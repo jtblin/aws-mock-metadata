@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -13,29 +12,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main() {
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080"
-	}
-
+// NewServer creates and starts a new http server
+func (app *App) NewServer() {
 	r := mux.NewRouter()
-	r.Handle("/", appHandler(rootHandler))
+	r.Handle("/", appHandler(app.rootHandler))
 	s := r.PathPrefix("/latest/meta-data").Subrouter()
-	s.Handle("/instance-id", appHandler(instanceIDHandler))
-	s.Handle("/local-hostname", appHandler(localHostnameHandler))
+	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
+	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
 	p := s.PathPrefix("/placement").Subrouter()
-	p.Handle("/availability-zone", appHandler(availabilityZoneHandler))
+	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
 	i := s.PathPrefix("/iam").Subrouter()
-	i.Handle("/security-credentials", appHandler(securityCredentialsHandler))
-	i.Handle("/security-credentials/local", appHandler(roleHandler))
+	i.Handle("/security-credentials", appHandler(app.securityCredentialsHandler))
+	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
 
-	r.Handle("/{path:.*}", appHandler(notFoundHandler))
-	p.Handle("/{path:.*}", appHandler(notFoundHandler))
-	i.Handle("/{path:.*}", appHandler(notFoundHandler))
+	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 
-	log.Infof("Listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	log.Infof("Listening on port %s", app.AppPort)
+	if err := http.ListenAndServe(":"+app.AppPort, r); err != nil {
 		log.Fatalf("Error creating http server: %+v", err)
 	}
 }
@@ -47,7 +42,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fn(w, r)
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) rootHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, `1.0
 2007-01-19
 2007-03-01
@@ -65,20 +60,20 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 latest`)
 }
 
-func instanceIDHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, "i-efcbaf30")
+func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.InstanceID)
 }
 
-func localHostnameHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, "ip-10-116-44-6.ec2.compute.internal")
+func (app *App) localHostnameHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.Hostname)
 }
 
-func availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, "ap-southeast-2b")
+func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.AvailabilityZone)
 }
 
-func securityCredentialsHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, "local")
+func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.RoleName)
 }
 
 // Credentials represent the security credentials response
@@ -92,10 +87,10 @@ type Credentials struct {
 	Expiration      string
 }
 
-func roleHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) roleHandler(w http.ResponseWriter, r *http.Request) {
 	svc := sts.New(session.New(), &aws.Config{LogLevel: aws.LogLevel(2)})
 	resp, err := svc.AssumeRole(&sts.AssumeRoleInput{
-		RoleArn:         aws.String("arn:aws:iam::123456789012:role/platform-dev-kubernetes-NodeIAMRole-1CBET3YCT9M74"),
+		RoleArn:         aws.String(app.RoleArn),
 		RoleSessionName: aws.String("aws-mock-metadata"),
 	})
 	if err != nil {
@@ -119,7 +114,7 @@ func roleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	path := vars["path"]
 	w.WriteHeader(404)

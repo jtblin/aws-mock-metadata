@@ -41,8 +41,10 @@ version:
 	@echo $(REPO_VERSION)
 
 run:
-	@APP_PORT=$(APP_PORT) AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
-		AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) bin/aws-mock-metadata
+	AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
+		AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) bin/aws-mock-metadata --availability-zone=$(AVAILABILITY_ZONE) \
+		--instance-id=$(INSTANCE_ID) --hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) \
+		--app-port=$(APP_PORT)
 
 run-macos:
 	bin/server-macos
@@ -51,9 +53,10 @@ run-linux:
 	bin/server-linux
 
 run-docker:
-	@docker run -it --rm -p 80:$(APP_PORT) -e APP_PORT=$(APP_PORT) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+	@docker run -it --rm -p 80:$(APP_PORT) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -e AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) \
-		jtblin/aws-mock-metadata:$(GIT_HASH)
+		jtblin/aws-mock-metadata:$(GIT_HASH) --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
+		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT)
 
 clean:
 	rm -f bin/aws-mock-metadata*
@@ -62,5 +65,5 @@ clean:
 
 release: docker
 	docker push jtblin/aws-mock-metadata:$(GIT_HASH)
-	docker tag jtblin/aws-mock-metadata:$(GIT_HASH) jtblin/aws-mock-metadata:latest
+	docker tag -f jtblin/aws-mock-metadata:$(GIT_HASH) jtblin/aws-mock-metadata:latest
 	docker push jtblin/aws-mock-metadata:latest
