@@ -19,15 +19,23 @@ func (app *App) NewServer() {
 	s := r.PathPrefix("/latest/meta-data").Subrouter()
 	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
 	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
+
 	p := s.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
 	i := s.PathPrefix("/iam").Subrouter()
 	i.Handle("/security-credentials", appHandler(app.securityCredentialsHandler))
 	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
 
+	n := s.PathPrefix("/network/interfaces").Subrouter()
+	n.Handle("/macs", appHandler(app.macHandler))
+	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
+
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	s.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 
 	log.Infof("Listening on port %s", app.AppPort)
 	if err := http.ListenAndServe(":"+app.AppPort, r); err != nil {
@@ -68,12 +76,24 @@ func (app *App) localHostnameHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.Hostname)
 }
 
+func (app *App) privateIpHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.PrivateIp)
+}
+
 func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.AvailabilityZone)
 }
 
 func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.RoleName)
+}
+
+func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.Hostname+"/")
+}
+
+func (app *App) vpcHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.VpcID)
 }
 
 // Credentials represent the security credentials response

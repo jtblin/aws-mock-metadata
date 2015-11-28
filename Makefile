@@ -56,7 +56,8 @@ run-docker:
 	@docker run -it --rm -p 80:$(APP_PORT) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -e AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) \
 		jtblin/aws-mock-metadata:$(GIT_HASH) --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
-		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT)
+		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT) \
+		--vpc-id=$(VPC_ID) --private-ip=$(PRIVATE_IP)
 
 clean:
 	rm -f bin/aws-mock-metadata*

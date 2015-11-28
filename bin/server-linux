@@ -15,7 +15,8 @@ sudo iptables -A PREROUTING ${FW_RULE_NUM} -t nat -i eth0 -p tcp --dport 80 -j D
 
 echo "Running AWS mock metadata service"
 $(dirname $0)/aws-mock-metadata-linux --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
-		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT) "${@}"
+		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT) \
+		--vpc-id=$(VPC_ID) --private-ip=$(PRIVATE_IP) "${@}"
 
 echo
 echo "Removing redirect ${APP_HOST} port 80 => ${APP_PORT}"
