@@ -1,4 +1,4 @@
-FROM gliderlabs/alpine:3.2
+FROM alpine:3.3
 MAINTAINER Jerome Touffe-Blin <jtblin@gmail.com>
 
 RUN apk --update add ca-certificates \
