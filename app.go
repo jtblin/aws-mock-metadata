@@ -14,11 +14,11 @@ type App struct {
 	AppPort          string
 	Hostname         string
 	InstanceID       string
-	PrivateIp	     string
+	PrivateIp        string
 	RoleArn          string
 	RoleName         string
 	Verbose          bool
-	VpcID	         string
+	VpcID            string
 }
 
 func main() {

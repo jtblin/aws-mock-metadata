@@ -13,7 +13,7 @@ setup:
 
 build: *.go
 	gofmt -w=true .
-	go build -o bin/aws-mock-metadata -x $(GOBUILD_VERSION_ARGS) github.com/jtblin/aws-mock-metadata
+	go build -o bin/aws-mock-metadata $(GOBUILD_VERSION_ARGS) github.com/jtblin/aws-mock-metadata
 
 test: check
 	go test
@@ -41,7 +41,7 @@ version:
 	@echo $(REPO_VERSION)
 
 run:
-	AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
+	@AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 		AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) bin/aws-mock-metadata --availability-zone=$(AVAILABILITY_ZONE) \
 		--instance-id=$(INSTANCE_ID) --hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) \
 		--app-port=$(APP_PORT)
