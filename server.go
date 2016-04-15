@@ -32,6 +32,9 @@ func (app *App) NewServer() {
 	n.Handle("/macs", appHandler(app.macHandler))
 	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
 
+	d := r.PathPrefix("/latest/dynamic/instance-identity").Subrouter()
+	d.Handle("/document", appHandler(app.instanceIdentityHandler))
+
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	s.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -110,6 +113,46 @@ type Credentials struct {
 	SecretAccessKey string
 	Token           string
 	Expiration      string
+}
+
+type InstanceIdentityDocument struct {
+	AvailabilityZone   string  `json:"availabilityZone"`
+	Region             string  `json:"region"`
+	DevpayProductCodes *string `json:"devpayProductCodes"`
+	PrivateIp          string  `json:"privateIp"`
+	Version            string  `json:"version"`
+	InstanceId         string  `json:"instanceId"`
+	BillingProducts    *string `json:"billingProducts"`
+	InstanceType       string  `json:"instanceType"`
+	AccountId          string  `json:"accountId"`
+	ImageId            string  `json:"imageId"`
+	PendingTime        string  `json:"pendingTime"`
+	Architecture       string  `json:"architecture"`
+	KernelId           *string `json:"kernelId"`
+	RamdiskId          *string `json:"ramdiskId"`
+}
+
+func (app *App) instanceIdentityHandler(w http.ResponseWriter, r *http.Request) {
+	document := InstanceIdentityDocument{
+		AvailabilityZone:   app.AvailabilityZone,
+		Region:             app.AvailabilityZone[:len(app.AvailabilityZone)-1],
+		DevpayProductCodes: nil,
+		PrivateIp:          "127.0.0.1",
+		Version:            "2010-08-31",
+		InstanceId:         "i-wxyz1234",
+		BillingProducts:    nil,
+		InstanceType:       "t2.micro",
+		AccountId:          "1234567890",
+		ImageId:            "ami-123456",
+		PendingTime:        "2016-04-15T12:14:15Z",
+		Architecture:       "x86_64",
+		KernelId:           nil,
+		RamdiskId:          nil,
+	}
+	if err := json.NewEncoder(w).Encode(document); err != nil {
+		log.Errorf("Error sending json %+v", err)
+		http.Error(w, err.Error(), 500)
+	}
 }
 
 func (app *App) roleHandler(w http.ResponseWriter, r *http.Request) {
