@@ -24,7 +24,8 @@ func (app *App) NewServer() {
 	p := s.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
 	i := s.PathPrefix("/iam").Subrouter()
-	i.Handle("/security-credentials", appHandler(app.securityCredentialsHandler))
+	i.Handle("/security-credentials", appHandler(app.trailingSlashRedirect))
+	i.Handle("/security-credentials/", appHandler(app.securityCredentialsHandler))
 	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
 
 	n := s.PathPrefix("/network/interfaces").Subrouter()
@@ -86,6 +87,10 @@ func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) 
 
 func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.RoleName)
+}
+
+func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, r.URL.String()+"/", 301)
 }
 
 func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {
