@@ -51,6 +51,7 @@ type appHandler func(http.ResponseWriter, *http.Request)
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Infof("Requesting %s", r.RequestURI)
+	w.Header().Set("Server", "EC2ws")
 	fn(w, r)
 }
 
