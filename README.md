@@ -22,6 +22,10 @@ before starting your program:
 
 	iptables -t nat -A OUTPUT -d 169.254.169.254 -j DNAT --to-destination ${HOST}
 
+Or if you don't want to modify your docker image, on your docker host (e.g. the one created with docker-machine):
+
+	iptables -t nat -A PREROUTING -d 169.254.169.254 -j DNAT --to-destination ${HOST}
+
 ## Development
 
 ### Configuration
