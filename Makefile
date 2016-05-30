@@ -35,7 +35,7 @@ cross:
 	 CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -a -installsuffix cgo -o bin/aws-mock-metadata-linux .
 
 docker: cross
-	 docker build -t jtblin/aws-mock-metadata:$(GIT_HASH) .
+	 docker build -t $(DOCKERHUB_USER)/aws-mock-metadata:$(GIT_HASH) .
 
 version:
 	@echo $(REPO_VERSION)
@@ -55,7 +55,7 @@ run-linux:
 run-docker:
 	@docker run -it --rm -p 80:$(APP_PORT) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 		-e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -e AWS_SESSION_TOKEN=$(AWS_SESSION_TOKEN) \
-		jtblin/aws-mock-metadata:$(GIT_HASH) --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
+		$(DOCKERHUB_USER)/aws-mock-metadata:$(GIT_HASH) --availability-zone=$(AVAILABILITY_ZONE) --instance-id=$(INSTANCE_ID) \
 		--hostname=$(HOSTNAME) --role-name=$(ROLE_NAME) --role-arn=$(ROLE_ARN) --app-port=$(APP_PORT) \
 		--vpc-id=$(VPC_ID) --private-ip=$(PRIVATE_IP)
 
@@ -65,6 +65,6 @@ clean:
 	docker rmi $(shell docker images -f 'dangling=true' -q) || true
 
 release: docker
-	docker push jtblin/aws-mock-metadata:$(GIT_HASH)
-	docker tag -f jtblin/aws-mock-metadata:$(GIT_HASH) jtblin/aws-mock-metadata:latest
-	docker push jtblin/aws-mock-metadata:latest
+	docker push $(DOCKERHUB_USER)/aws-mock-metadata:$(GIT_HASH)
+	docker tag -f $(DOCKERHUB_USER)/aws-mock-metadata:$(GIT_HASH) $(DOCKERHUB_USER)/aws-mock-metadata:latest
+	docker push $(DOCKERHUB_USER)/aws-mock-metadata:latest

@@ -34,6 +34,7 @@ Set the following environment variables or create a .env file with the following
 
 * `AWS_ACCESS_KEY_ID`: aws access key
 * `AWS_SECRET_ACCESS_KEY`: aws secret access key
+* `DOCKERHUB_USER`: your username on DockerHub used to tag docker images built on running `make docker`
 
 Command line arguments:
 
