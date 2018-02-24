@@ -1,10 +1,45 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 )
+
+// DRY
+func doBodyTest(t *testing.T, uri string, expected_body string) {
+	res, err := http.Get(testServer.URL + uri)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != expected_body {
+		t.Errorf("%s : Expected\n%s\ngot\n%s", uri, expected_body, string(body))
+	}
+}
+
+// Some URIs have 301 redirects on the real metadata service
+func doRedirectTest(t *testing.T, uri string, expected_location_uri string) {
+	res, err := http.Get(testServer.URL + uri)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != 301 {
+		t.Errorf("%s : Expected HTTP Status Code 301, got %d\n", uri, res.StatusCode)
+	}
+	if res.Header.Get("Location") == "" {
+		t.Errorf("%s : Expected a 'Location' HTTP response header, none found\n", uri)
+	}
+	expected_location := fmt.Sprintf("http://169.254.169.254%s", expected_location_uri)
+	if res.Header.Get("Location") != expected_location {
+		t.Errorf("%s : Expected 'Location' HTTP response header of %s, got %s\n", uri, expected_location, res.Header.Get("Location"))
+	}
+}
 
 func TestRoot(t *testing.T) {
 	expected_body := `1.0
@@ -27,18 +62,17 @@ func TestRoot(t *testing.T) {
 2016-09-02
 latest`
 
-	res, err := http.Get(testServer.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	defer res.Body.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(body) != expected_body {
-		t.Errorf("Expected\n%s\ngot\n%s", expected_body, string(body))
-	}
+	doBodyTest(t, "", expected_body)
+	doBodyTest(t, "/", expected_body)
+}
+
+func TestLatest(t *testing.T) {
+	expected_body := `dynamic
+meta-data
+user-data`
+
+	doRedirectTest(t, "/latest", "/latest/")
+	doBodyTest(t, "/latest/", expected_body)
 }
 
 // TODO: iam/ subdirectory only appears in latest/ (and other date namespaces) if an IAM instance profile is attached, omitted otherwise. handle elegantly

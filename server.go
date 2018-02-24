@@ -43,6 +43,7 @@ func (app *App) NewServer() *mux.Router {
 
 // Provides the per date-versioned prefix routes
 func (app *App) serverSubRouter(sr *mux.Router) {
+	sr.Handle("/", appHandler(app.secondLevelHandler))
 	s := sr.PathPrefix("/meta-data").Subrouter()
 	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
 	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
@@ -98,6 +99,12 @@ func (app *App) rootHandler(w http.ResponseWriter, r *http.Request) {
 2016-06-30
 2016-09-02
 latest`)
+}
+
+func (app *App) secondLevelHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `dynamic
+meta-data
+user-data`)
 }
 
 func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
