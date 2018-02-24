@@ -23,6 +23,7 @@ func (app *App) StartServer() {
 // NewServer creates a new http server (starting handled separately to allow test suites to reuse)
 func (app *App) NewServer() *mux.Router {
 	r := mux.NewRouter()
+	r.Handle("", appHandler(app.rootHandler))
 	r.Handle("/", appHandler(app.rootHandler))
 
 	l := r.PathPrefix("/latest").Subrouter()
@@ -43,8 +44,10 @@ func (app *App) NewServer() *mux.Router {
 
 // Provides the per date-versioned prefix routes
 func (app *App) serverSubRouter(sr *mux.Router) {
+	// sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
 	s := sr.PathPrefix("/meta-data").Subrouter()
+	s.Handle("/", appHandler(app.metaDataHandler))
 	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
 	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
 	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
@@ -107,6 +110,30 @@ meta-data
 user-data`)
 }
 
+func (app *App) metaDataHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `ami-id
+ami-launch-index
+ami-manifest-path
+block-device-mapping/
+hostname
+iam/
+instance-action
+instance-id
+instance-type
+local-hostname
+local-ipv4
+mac
+metrics/
+network/
+placement/
+profile
+public-hostname
+public-ipv4
+reservation-id
+security-groups
+services/`)
+}
+
 func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.InstanceID)
 }
@@ -128,7 +155,8 @@ func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, r.URL.String()+"/", 301)
+	w.Header().Set("Location", r.URL.String()+"/")
+	w.WriteHeader(301)
 }
 
 func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {

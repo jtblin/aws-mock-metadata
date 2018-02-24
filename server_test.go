@@ -19,7 +19,7 @@ func doBodyTest(t *testing.T, uri string, expected_body string) {
 		t.Fatal(err)
 	}
 	if string(body) != expected_body {
-		t.Errorf("%s : Expected\n%s\ngot\n%s", uri, expected_body, string(body))
+		t.Errorf("%s : Expected\n\n%s\n\ngot\n\n%s", uri, expected_body, string(body))
 	}
 }
 
@@ -67,12 +67,38 @@ latest`
 }
 
 func TestLatest(t *testing.T) {
-	expected_body := `dynamic
-meta-data
-user-data`
+	// expected_body := `dynamic
+	// meta-data
+	// user-data`
 
 	doRedirectTest(t, "/latest", "/latest/")
-	doBodyTest(t, "/latest/", expected_body)
+	//doBodyTest(t, "/latest/", expected_body)
 }
 
-// TODO: iam/ subdirectory only appears in latest/ (and other date namespaces) if an IAM instance profile is attached, omitted otherwise. handle elegantly
+func TestLatestMetaData(t *testing.T) {
+	// NOTE: iam/ only appears if there is an IAM Instance Profile attached to the instance. assuming available for simulation purposes for now.
+	expected_body := `ami-id
+ami-launch-index
+ami-manifest-path
+block-device-mapping/
+hostname
+iam/
+instance-action
+instance-id
+instance-type
+local-hostname
+local-ipv4
+mac
+metrics/
+network/
+placement/
+profile
+public-hostname
+public-ipv4
+reservation-id
+security-groups
+services/`
+
+	doRedirectTest(t, "/latest/meta-data", "/latest/meta-data/")
+	doBodyTest(t, "/latest/meta-data/", expected_body)
+}
