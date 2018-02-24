@@ -16,35 +16,53 @@ import (
 func (app *App) NewServer() {
 	r := mux.NewRouter()
 	r.Handle("/", appHandler(app.rootHandler))
-	s := r.PathPrefix("/latest/meta-data").Subrouter()
-	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
-	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
-	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
 
-	p := s.PathPrefix("/placement").Subrouter()
-	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
-	i := s.PathPrefix("/iam").Subrouter()
-	i.Handle("/security-credentials", appHandler(app.trailingSlashRedirect))
-	i.Handle("/security-credentials/", appHandler(app.securityCredentialsHandler))
-	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
+	l := r.PathPrefix("/latest").Subrouter()
+	app.serverSubRouter(l)
 
-	n := s.PathPrefix("/network/interfaces").Subrouter()
-	n.Handle("/macs", appHandler(app.macHandler))
-	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
+	d1 := r.PathPrefix("/2014-11-05").Subrouter()
+	app.serverSubRouter(d1)
 
-	d := r.PathPrefix("/latest/dynamic/instance-identity").Subrouter()
-	d.Handle("/document", appHandler(app.instanceIdentityHandler))
+	d2 := r.PathPrefix("/2014-02-25").Subrouter()
+	app.serverSubRouter(d2)
+
+	// TODOLATER: do we want other date versioned APIs exposed also?
 
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-	s.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 
 	log.Infof("Listening on port %s", app.AppPort)
 	if err := http.ListenAndServe(":"+app.AppPort, r); err != nil {
 		log.Fatalf("Error creating http server: %+v", err)
 	}
+}
+
+// Provides the per date-versioned prefix routes
+func (app *App) serverSubRouter(sr *mux.Router) {
+	s := sr.PathPrefix("/meta-data").Subrouter()
+	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
+	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
+
+	p := sr.PathPrefix("/placement").Subrouter()
+	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
+	i := sr.PathPrefix("/iam").Subrouter()
+	i.Handle("/security-credentials", appHandler(app.trailingSlashRedirect))
+	i.Handle("/security-credentials/", appHandler(app.securityCredentialsHandler))
+	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
+
+	n := sr.PathPrefix("/network/interfaces").Subrouter()
+	n.Handle("/macs", appHandler(app.macHandler))
+	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
+
+	d := sr.PathPrefix("/dynamic/instance-identity").Subrouter()
+	d.Handle("/document", appHandler(app.instanceIdentityHandler))
+
+	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+
+	s.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 }
 
 type appHandler func(http.ResponseWriter, *http.Request)
