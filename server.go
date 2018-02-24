@@ -12,8 +12,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// NewServer creates and starts a new http server
-func (app *App) NewServer() {
+// StartServer starts a newly created http server
+func (app *App) StartServer() {
+	log.Infof("Listening on port %s", app.AppPort)
+	if err := http.ListenAndServe(":"+app.AppPort, app.NewServer()); err != nil {
+		log.Fatalf("Error creating http server: %+v", err)
+	}
+}
+
+// NewServer creates a new http server (starting handled separately to allow test suites to reuse)
+func (app *App) NewServer() *mux.Router {
 	r := mux.NewRouter()
 	r.Handle("/", appHandler(app.rootHandler))
 
@@ -30,10 +38,7 @@ func (app *App) NewServer() {
 
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 
-	log.Infof("Listening on port %s", app.AppPort)
-	if err := http.ListenAndServe(":"+app.AppPort, r); err != nil {
-		log.Fatalf("Error creating http server: %+v", err)
-	}
+	return r
 }
 
 // Provides the per date-versioned prefix routes
@@ -88,6 +93,10 @@ func (app *App) rootHandler(w http.ResponseWriter, r *http.Request) {
 2012-01-12
 2014-02-25
 2014-11-05
+2015-10-20
+2016-04-19
+2016-06-30
+2016-09-02
 latest`)
 }
 

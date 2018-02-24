@@ -31,7 +31,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	app.NewServer()
+	app.StartServer()
 }
 
 func (app *App) addFlags(fs *pflag.FlagSet) {
