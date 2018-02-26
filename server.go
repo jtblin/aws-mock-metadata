@@ -65,30 +65,41 @@ func (app *App) NewServer() *mux.Router {
 func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
-	s := sr.PathPrefix("/meta-data").Subrouter()
-	s.Handle("", appHandler(app.trailingSlashRedirect))
-	s.Handle("/", appHandler(app.metaDataHandler))
-	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
-	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
-	s.Handle("/local-ipv4", appHandler(app.privateIpHandler))
 
-	p := sr.PathPrefix("/placement").Subrouter()
+	d := sr.PathPrefix("/dynamic").Subrouter()
+	d.Handle("", appHandler(app.trailingSlashRedirect))
+	d.Handle("/", appHandler(app.dynamicHandler))
+	ii := d.PathPrefix("/instance-identity").Subrouter()
+	ii.Handle("", appHandler(app.trailingSlashRedirect))
+	ii.Handle("/", appHandler(app.instanceIdentityHandler))
+	ii.Handle("/document", appHandler(app.instanceIdentityDocumentHandler))
+	// TODO: implement
+	//ii.Handle("/pkcs7", appHandler(app.instanceIdentityHandler))
+	//ii.Handle("/signature", appHandler(app.instanceIdentityHandler))
+
+	m := sr.PathPrefix("/meta-data").Subrouter()
+	m.Handle("", appHandler(app.trailingSlashRedirect))
+	m.Handle("/", appHandler(app.metaDataHandler))
+	m.Handle("/instance-id", appHandler(app.instanceIDHandler))
+	m.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+	m.Handle("/local-ipv4", appHandler(app.privateIpHandler))
+
+	p := m.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
-	i := sr.PathPrefix("/iam").Subrouter()
+
+	i := m.PathPrefix("/iam").Subrouter()
 	i.Handle("/security-credentials", appHandler(app.trailingSlashRedirect))
 	i.Handle("/security-credentials/", appHandler(app.securityCredentialsHandler))
 	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
 
-	n := sr.PathPrefix("/network/interfaces").Subrouter()
+	n := m.PathPrefix("/network/interfaces").Subrouter()
 	n.Handle("/macs", appHandler(app.macHandler))
 	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
 
-	d := sr.PathPrefix("/dynamic/instance-identity").Subrouter()
-	d.Handle("/document", appHandler(app.instanceIdentityHandler))
-
 	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-
-	s.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	ii.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	m.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -110,6 +121,58 @@ func (app *App) secondLevelHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, `dynamic
 meta-data
 user-data`)
+}
+
+func (app *App) dynamicHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `instance-identity/
+`)
+}
+
+func (app *App) instanceIdentityHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `document
+pkcs7
+signature
+`)
+}
+
+type InstanceIdentityDocument struct {
+	AvailabilityZone   string  `json:"availabilityZone"`
+	Region             string  `json:"region"`
+	DevpayProductCodes *string `json:"devpayProductCodes"`
+	PrivateIp          string  `json:"privateIp"`
+	Version            string  `json:"version"`
+	InstanceId         string  `json:"instanceId"`
+	BillingProducts    *string `json:"billingProducts"`
+	InstanceType       string  `json:"instanceType"`
+	AccountId          string  `json:"accountId"`
+	ImageId            string  `json:"imageId"`
+	PendingTime        string  `json:"pendingTime"`
+	Architecture       string  `json:"architecture"`
+	KernelId           *string `json:"kernelId"`
+	RamdiskId          *string `json:"ramdiskId"`
+}
+
+func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.Request) {
+	document := InstanceIdentityDocument{
+		AvailabilityZone:   app.AvailabilityZone,
+		Region:             app.AvailabilityZone[:len(app.AvailabilityZone)-1],
+		DevpayProductCodes: nil,
+		PrivateIp:          "127.0.0.1",
+		Version:            "2010-08-31",
+		InstanceId:         "i-wxyz1234",
+		BillingProducts:    nil,
+		InstanceType:       "t2.micro",
+		AccountId:          "1234567890",
+		ImageId:            "ami-123456",
+		PendingTime:        "2016-04-15T12:14:15Z",
+		Architecture:       "x86_64",
+		KernelId:           nil,
+		RamdiskId:          nil,
+	}
+	if err := json.NewEncoder(w).Encode(document); err != nil {
+		log.Errorf("Error sending json %+v", err)
+		http.Error(w, err.Error(), 500)
+	}
 }
 
 func (app *App) metaDataHandler(w http.ResponseWriter, r *http.Request) {
@@ -183,46 +246,6 @@ type Credentials struct {
 	SecretAccessKey string
 	Token           string
 	Expiration      string
-}
-
-type InstanceIdentityDocument struct {
-	AvailabilityZone   string  `json:"availabilityZone"`
-	Region             string  `json:"region"`
-	DevpayProductCodes *string `json:"devpayProductCodes"`
-	PrivateIp          string  `json:"privateIp"`
-	Version            string  `json:"version"`
-	InstanceId         string  `json:"instanceId"`
-	BillingProducts    *string `json:"billingProducts"`
-	InstanceType       string  `json:"instanceType"`
-	AccountId          string  `json:"accountId"`
-	ImageId            string  `json:"imageId"`
-	PendingTime        string  `json:"pendingTime"`
-	Architecture       string  `json:"architecture"`
-	KernelId           *string `json:"kernelId"`
-	RamdiskId          *string `json:"ramdiskId"`
-}
-
-func (app *App) instanceIdentityHandler(w http.ResponseWriter, r *http.Request) {
-	document := InstanceIdentityDocument{
-		AvailabilityZone:   app.AvailabilityZone,
-		Region:             app.AvailabilityZone[:len(app.AvailabilityZone)-1],
-		DevpayProductCodes: nil,
-		PrivateIp:          "127.0.0.1",
-		Version:            "2010-08-31",
-		InstanceId:         "i-wxyz1234",
-		BillingProducts:    nil,
-		InstanceType:       "t2.micro",
-		AccountId:          "1234567890",
-		ImageId:            "ami-123456",
-		PendingTime:        "2016-04-15T12:14:15Z",
-		Architecture:       "x86_64",
-		KernelId:           nil,
-		RamdiskId:          nil,
-	}
-	if err := json.NewEncoder(w).Encode(document); err != nil {
-		log.Errorf("Error sending json %+v", err)
-		http.Error(w, err.Error(), 500)
-	}
 }
 
 func (app *App) roleHandler(w http.ResponseWriter, r *http.Request) {

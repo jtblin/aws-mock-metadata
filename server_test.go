@@ -98,7 +98,8 @@ func TestLatestDynamic(t *testing.T) {
 func TestLatestDynamicInstanceIdentity(t *testing.T) {
 	expected_body := `document
 pkcs7
-signature`
+signature
+`
 
 	doRedirectTest(t, "/latest/dynamic/instance-identity", "/latest/dynamic/instance-identity/")
 	doBodyTest(t, "/latest/dynamic/instance-identity/", expected_body)
