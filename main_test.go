@@ -15,6 +15,7 @@ func TestMain(m *testing.M) {
 	// Setup the test API
 	app := &App{}
 	// Mock parameters
+	app.AmiID = "ami-asdfasdf"
 	app.AvailabilityZone = "us-east-1a"
 	// AppPort not required
 	app.Hostname = "testhostname"

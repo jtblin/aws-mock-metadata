@@ -73,16 +73,38 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	ii.Handle("", appHandler(app.trailingSlashRedirect))
 	ii.Handle("/", appHandler(app.instanceIdentityHandler))
 	ii.Handle("/document", appHandler(app.instanceIdentityDocumentHandler))
-	// TODO: implement
-	//ii.Handle("/pkcs7", appHandler(app.instanceIdentityHandler))
-	//ii.Handle("/signature", appHandler(app.instanceIdentityHandler))
+	ii.Handle("/document/", appHandler(app.instanceIdentityDocumentHandler))
+	ii.Handle("/pkcs7", appHandler(app.instanceIdentityPkcs7Handler))
+	ii.Handle("/pkcs7/", appHandler(app.instanceIdentityPkcs7Handler))
+	ii.Handle("/signature", appHandler(app.instanceIdentitySignatureHandler))
+	ii.Handle("/signature/", appHandler(app.instanceIdentitySignatureHandler))
 
 	m := sr.PathPrefix("/meta-data").Subrouter()
 	m.Handle("", appHandler(app.trailingSlashRedirect))
 	m.Handle("/", appHandler(app.metaDataHandler))
+	m.Handle("/ami-id", appHandler(app.amiIdHandler))
+	m.Handle("/ami-id/", appHandler(app.amiIdHandler))
+	m.Handle("/ami-launch-index", appHandler(app.amiLaunchIndexHandler))
+	m.Handle("/ami-launch-index/", appHandler(app.amiLaunchIndexHandler))
+	m.Handle("/ami-manifest-path", appHandler(app.amiManifestPathHandler))
+	m.Handle("/ami-manifest-path/", appHandler(app.amiManifestPathHandler))
+
+	bdm := m.PathPrefix("/block-device-mapping").Subrouter()
+	bdm.Handle("", appHandler(app.trailingSlashRedirect))
+	bdm.Handle("/", appHandler(app.blockDeviceMappingHandler))
+	bdm.Handle("/ami", appHandler(app.blockDeviceMappingAmiHandler))
+	bdm.Handle("/ami/", appHandler(app.blockDeviceMappingAmiHandler))
+	bdm.Handle("/root", appHandler(app.blockDeviceMappingRootHandler))
+	bdm.Handle("/root/", appHandler(app.blockDeviceMappingRootHandler))
+
+	m.Handle("/hostname", appHandler(app.hostnameHandler))
+	m.Handle("/hostname/", appHandler(app.hostnameHandler))
 	m.Handle("/instance-id", appHandler(app.instanceIDHandler))
+	m.Handle("/instance-id/", appHandler(app.instanceIDHandler))
 	m.Handle("/local-hostname", appHandler(app.localHostnameHandler))
+	m.Handle("/local-hostname/", appHandler(app.localHostnameHandler))
 	m.Handle("/local-ipv4", appHandler(app.privateIpHandler))
+	m.Handle("/local-ipv4/", appHandler(app.privateIpHandler))
 
 	p := m.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
@@ -100,6 +122,7 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	ii.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	m.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	bdm.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -135,6 +158,7 @@ signature
 `)
 }
 
+// NOTE: order of keys here differs from real metadata service, in theory most (proper) JSON parsers should be fine with it though...
 type InstanceIdentityDocument struct {
 	AvailabilityZone   string  `json:"availabilityZone"`
 	Region             string  `json:"region"`
@@ -157,13 +181,13 @@ func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.R
 		AvailabilityZone:   app.AvailabilityZone,
 		Region:             app.AvailabilityZone[:len(app.AvailabilityZone)-1],
 		DevpayProductCodes: nil,
-		PrivateIp:          "127.0.0.1",
+		PrivateIp:          app.PrivateIp,
 		Version:            "2010-08-31",
-		InstanceId:         "i-wxyz1234",
+		InstanceId:         app.InstanceID,
 		BillingProducts:    nil,
 		InstanceType:       "t2.micro",
 		AccountId:          "1234567890",
-		ImageId:            "ami-123456",
+		ImageId:            app.AmiID,
 		PendingTime:        "2016-04-15T12:14:15Z",
 		Architecture:       "x86_64",
 		KernelId:           nil,
@@ -175,7 +199,20 @@ func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.R
 	}
 }
 
+func (app *App) instanceIdentityPkcs7Handler(w http.ResponseWriter, r *http.Request) {
+	// TODO: adjust output to suit
+	write(w, `
+`)
+}
+
+func (app *App) instanceIdentitySignatureHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: adjust output to suit
+	write(w, `
+`)
+}
+
 func (app *App) metaDataHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: if IAM Role/Instance Profile is disabled, don't add iam/ to the list (same behavior as real metadata service)
 	write(w, `ami-id
 ami-launch-index
 ami-manifest-path
@@ -197,6 +234,36 @@ public-ipv4
 reservation-id
 security-groups
 services/`)
+}
+
+func (app *App) amiIdHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.AmiID)
+}
+
+func (app *App) amiLaunchIndexHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, "0")
+}
+
+func (app *App) amiManifestPathHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, "(unknown)")
+}
+
+func (app *App) blockDeviceMappingHandler(w http.ResponseWriter, r *http.Request) {
+	// Not exposing any extra volumes for now, this is pretty standard for an EBS backed EC2 instance.
+	write(w, `ami
+root`)
+}
+
+func (app *App) blockDeviceMappingAmiHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, "/dev/xvda")
+}
+
+func (app *App) blockDeviceMappingRootHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, "/dev/xvda")
+}
+
+func (app *App) hostnameHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.Hostname)
 }
 
 func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
