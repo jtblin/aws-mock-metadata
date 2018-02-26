@@ -44,7 +44,7 @@ func (app *App) NewServer() *mux.Router {
 
 // Provides the per date-versioned prefix routes
 func (app *App) serverSubRouter(sr *mux.Router) {
-	// sr.Handle("", appHandler(app.trailingSlashRedirect))
+	sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
 	s := sr.PathPrefix("/meta-data").Subrouter()
 	s.Handle("/", appHandler(app.metaDataHandler))
