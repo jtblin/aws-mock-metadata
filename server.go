@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -21,30 +22,47 @@ func (app *App) StartServer() {
 	}
 }
 
+func (app *App) apiVersionPrefixes() []string {
+	return []string{"1.0",
+		"2007-01-19",
+		"2007-03-01",
+		"2007-08-29",
+		"2007-10-10",
+		"2007-12-15",
+		"2008-02-01",
+		"2008-09-01",
+		"2009-04-04",
+		"2011-01-01",
+		"2011-05-01",
+		"2012-01-12",
+		"2014-02-25",
+		"2014-11-05",
+		"2015-10-20",
+		"2016-04-19",
+		"2016-06-30",
+		"2016-09-02",
+		"latest",
+	}
+}
+
 // NewServer creates a new http server (starting handled separately to allow test suites to reuse)
 func (app *App) NewServer() *mux.Router {
 	r := mux.NewRouter()
 	r.Handle("", appHandler(app.rootHandler))
 	r.Handle("/", appHandler(app.rootHandler))
 
-	l := r.PathPrefix("/latest").Subrouter()
-	app.serverSubRouter(l)
-
-	d1 := r.PathPrefix("/2014-11-05").Subrouter()
-	app.serverSubRouter(d1)
-
-	d2 := r.PathPrefix("/2014-02-25").Subrouter()
-	app.serverSubRouter(d2)
-
-	// TODOLATER: do we want other date versioned APIs exposed also?
+	for _, v := range app.apiVersionPrefixes() {
+		d := r.PathPrefix(fmt.Sprintf("/%s", v)).Subrouter()
+		app.versionSubRouter(d, v)
+	}
 
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 
 	return r
 }
 
-// Provides the per date-versioned prefix routes
-func (app *App) serverSubRouter(sr *mux.Router) {
+// Provides the versioned (normally 1.0, YYYY-MM-DD or latest) prefix routes
+func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
 	s := sr.PathPrefix("/meta-data").Subrouter()
@@ -85,25 +103,7 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) rootHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, `1.0
-2007-01-19
-2007-03-01
-2007-08-29
-2007-10-10
-2007-12-15
-2008-02-01
-2008-09-01
-2009-04-04
-2011-01-01
-2011-05-01
-2012-01-12
-2014-02-25
-2014-11-05
-2015-10-20
-2016-04-19
-2016-06-30
-2016-09-02
-latest`)
+	write(w, strings.Join(app.apiVersionPrefixes(), "\n"))
 }
 
 func (app *App) secondLevelHandler(w http.ResponseWriter, r *http.Request) {
