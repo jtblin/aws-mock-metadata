@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -47,6 +48,7 @@ func (app *App) serverSubRouter(sr *mux.Router) {
 	sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
 	s := sr.PathPrefix("/meta-data").Subrouter()
+	s.Handle("", appHandler(app.trailingSlashRedirect))
 	s.Handle("/", appHandler(app.metaDataHandler))
 	s.Handle("/instance-id", appHandler(app.instanceIDHandler))
 	s.Handle("/local-hostname", appHandler(app.localHostnameHandler))
@@ -155,7 +157,12 @@ func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Location", r.URL.String()+"/")
+	location := ""
+	if app.NoSchemeHostRedirects == false {
+		location = "http://169.254.169.254"
+	}
+	location = fmt.Sprintf("%s%s/", location, r.URL.String())
+	w.Header().Set("Location", location)
 	w.WriteHeader(301)
 }
 
