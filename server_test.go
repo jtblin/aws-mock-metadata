@@ -7,9 +7,20 @@ import (
 	"testing"
 )
 
+// Custom HTTP client, that defines the redirect behavior.
+// Don't follow 301s, return them so the tests can correctly identify and validate responses
+func testHttpClient() *http.Client {
+	return &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+}
+
 // DRY
 func doBodyTest(t *testing.T, uri string, expected_body string) {
-	res, err := http.Get(testServer.URL + uri)
+	client := testHttpClient()
+	res, err := client.Get(testServer.URL + uri)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +36,8 @@ func doBodyTest(t *testing.T, uri string, expected_body string) {
 
 // Some URIs have 301 redirects on the real metadata service
 func doRedirectTest(t *testing.T, uri string, expected_location_uri string) {
-	res, err := http.Get(testServer.URL + uri)
+	client := testHttpClient()
+	res, err := client.Get(testServer.URL + uri)
 	if err != nil {
 		t.Fatal(err)
 	}
