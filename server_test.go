@@ -79,12 +79,29 @@ latest`
 }
 
 func TestLatest(t *testing.T) {
-	// expected_body := `dynamic
-	// meta-data
-	// user-data`
+	expected_body := `dynamic
+meta-data
+user-data`
 
 	doRedirectTest(t, "/latest", "/latest/")
-	//doBodyTest(t, "/latest/", expected_body)
+	doBodyTest(t, "/latest/", expected_body)
+}
+
+func TestLatestDynamic(t *testing.T) {
+	expected_body := `instance-identity/
+`
+
+	doRedirectTest(t, "/latest/dynamic", "/latest/dynamic/")
+	doBodyTest(t, "/latest/dynamic/", expected_body)
+}
+
+func TestLatestDynamicInstanceIdentity(t *testing.T) {
+	expected_body := `document
+pkcs7
+signature`
+
+	doRedirectTest(t, "/latest/dynamic/instance-identity", "/latest/dynamic/instance-identity/")
+	doBodyTest(t, "/latest/dynamic/instance-identity/", expected_body)
 }
 
 func TestLatestMetaData(t *testing.T) {
@@ -113,4 +130,9 @@ services/`
 
 	doRedirectTest(t, "/latest/meta-data", "/latest/meta-data/")
 	doBodyTest(t, "/latest/meta-data/", expected_body)
+}
+
+func TestLatestUserData(t *testing.T) {
+	// TODO: /latest/user-data returns a 404 if none exists... or if one exists, will return it?
+	// should we expose this in the API? not implemented right now. could be useful...
 }
