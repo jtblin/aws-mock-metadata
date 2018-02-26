@@ -10,15 +10,16 @@ import (
 // App encapsulates all of the parameters necessary for starting up
 // an aws mock metadata server. These can either be set via command line or directly.
 type App struct {
-	AvailabilityZone string
-	AppPort          string
-	Hostname         string
-	InstanceID       string
-	PrivateIp        string
-	RoleArn          string
-	RoleName         string
-	Verbose          bool
-	VpcID            string
+	AvailabilityZone      string
+	AppPort               string
+	Hostname              string
+	InstanceID            string
+	PrivateIp             string
+	RoleArn               string
+	RoleName              string
+	Verbose               bool
+	VpcID                 string
+	NoSchemeHostRedirects bool
 }
 
 func main() {
@@ -44,4 +45,5 @@ func (app *App) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&app.RoleName, "role-name", app.RoleName, "IAM role name")
 	fs.BoolVar(&app.Verbose, "verbose", false, "Verbose")
 	fs.StringVar(&app.VpcID, "vpc-id", app.VpcID, "VPC id")
+	fs.BoolVar(&app.NoSchemeHostRedirects, "no-scheme-host-redirects", app.NoSchemeHostRedirects, "Disable the scheme://host prefix in Location redirect headers")
 }
