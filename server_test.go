@@ -377,6 +377,13 @@ func TestLatestMetaDataNIMAddrInterfaceId(t *testing.T) {
 
 // TODO: coverage for the network/interfaces/macs/mac_addr/... namespaces...
 
+func TestLatestMetaDataProfile(t *testing.T) {
+	expected_body := `default-hvm`
+
+	doBodyTest(t, "/latest/meta-data/profile", expected_body)
+	doBodyTest(t, "/latest/meta-data/profile/", expected_body)
+}
+
 func TestLatestUserData(t *testing.T) {
 	// TODO: /latest/user-data returns a 404 if none exists... or if one exists, will return it?
 	// should we expose this in the API? not implemented right now. could be useful...

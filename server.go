@@ -62,6 +62,7 @@ func (app *App) NewServer() *mux.Router {
 }
 
 // Provides the versioned (normally 1.0, YYYY-MM-DD or latest) prefix routes
+// TODO: conditional out the namespaces that don't exist on selected API versions
 func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
@@ -69,6 +70,7 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	d := sr.PathPrefix("/dynamic").Subrouter()
 	d.Handle("", appHandler(app.trailingSlashRedirect))
 	d.Handle("/", appHandler(app.dynamicHandler))
+
 	ii := d.PathPrefix("/instance-identity").Subrouter()
 	ii.Handle("", appHandler(app.trailingSlashRedirect))
 	ii.Handle("/", appHandler(app.instanceIdentityHandler))
@@ -124,6 +126,12 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	m.Handle("/mac", appHandler(app.macHandler))
 	m.Handle("/mac/", appHandler(app.macHandler))
 
+	me := m.PathPrefix("/metrics").Subrouter()
+	me.Handle("", appHandler(app.trailingSlashRedirect))
+	me.Handle("/", appHandler(app.metricsHandler))
+	me.Handle("/vhostmd", appHandler(app.metricsVhostmdHandler))
+	me.Handle("/vhostmd/", appHandler(app.metricsVhostmdHandler))
+
 	n := m.PathPrefix("/network").Subrouter()
 	n.Handle("", appHandler(app.trailingSlashRedirect))
 	n.Handle("/", appHandler(app.networkHandler))
@@ -143,23 +151,27 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	// TODO: expand API coverage
 	nimaddr.Handle("/vpc-id", appHandler(app.vpcHandler))
 
-	me := m.PathPrefix("/metrics").Subrouter()
-	me.Handle("", appHandler(app.trailingSlashRedirect))
-	me.Handle("/", appHandler(app.metricsHandler))
-	me.Handle("/vhostmd", appHandler(app.metricsVhostmdHandler))
-	me.Handle("/vhostmd/", appHandler(app.metricsVhostmdHandler))
-
 	p := m.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
+
+	m.Handle("/profile", appHandler(app.profileHandler))
+	m.Handle("/profile/", appHandler(app.profileHandler))
+	m.Handle("/public-hostname", appHandler(app.hostnameHandler))
+	m.Handle("/public-hostname/", appHandler(app.hostnameHandler))
 
 	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	ii.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	m.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	bdm.Handle("/{path:.*}", appHandler(app.notFoundHandler))
-	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	i.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	isc.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	me.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	n.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	ni.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	nim.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	nimaddr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 }
 
 type appHandler func(http.ResponseWriter, *http.Request)
@@ -402,6 +414,10 @@ func (app *App) nimAddrDeviceNumberHandler(w http.ResponseWriter, r *http.Reques
 
 func (app *App) nimAddrInterfaceIdHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, `eni-asdfasdf`)
+}
+
+func (app *App) profileHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `default-hvm`)
 }
 
 func (app *App) vpcHandler(w http.ResponseWriter, r *http.Request) {
