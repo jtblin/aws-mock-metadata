@@ -219,6 +219,164 @@ func TestLatestMetaDataHostname(t *testing.T) {
 	doBodyTest(t, "/latest/meta-data/hostname/", expected_body)
 }
 
+func TestLatestMetaDataIam(t *testing.T) {
+	expected_body := `info
+security-credentials/`
+
+	doRedirectTest(t, "/latest/meta-data/iam", "/latest/meta-data/iam/")
+	doBodyTest(t, "/latest/meta-data/iam/", expected_body)
+}
+
+func TestLatestMetaDataIamInfo(t *testing.T) {
+	expected_body := `{
+  "Code" : "Success",
+  "LastUpdated" : "2018-02-26T23:50:00Z",
+  "InstanceProfileArn" : "arn:aws:iam::123456789012:instance-profile/some-instance-profile",
+  "InstanceProfileId" : "some-instance-profile-id"
+}`
+
+	doBodyTest(t, "/latest/meta-data/iam/info", expected_body)
+	doBodyTest(t, "/latest/meta-data/iam/info/", expected_body)
+}
+
+func TestLatestMetaDataIamSecurityCredentials(t *testing.T) {
+	expected_body := `some-instance-profile`
+
+	doRedirectTest(t, "/latest/meta-data/iam/security-credentials", "/latest/meta-data/iam/security-credentials/")
+	doBodyTest(t, "/latest/meta-data/iam/security-credentials/", expected_body)
+}
+
+func TestLatestMetaDataIamSecurityCredentialsSomeInstanceProfile(t *testing.T) {
+	expected_body := `{
+  "Code" : "Success",
+  "LastUpdated" : "2018-02-27T00:50:01Z",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "some-access-key-id",
+  "SecretAccessKey" : "some-secret-access-key",
+  "Token" : "some-token",
+  "Expiration" : "2018-02-27T07:07:02Z"
+}`
+
+	doBodyTest(t, "/latest/meta-data/iam/security-credentials/some-instance-profile", expected_body)
+	doBodyTest(t, "/latest/meta-data/iam/security-credentials/some-instance-profile/", expected_body)
+}
+
+func TestLatestMetaDataInstanceAction(t *testing.T) {
+	expected_body := `none`
+
+	doBodyTest(t, "/latest/meta-data/instance-action", expected_body)
+	doBodyTest(t, "/latest/meta-data/instance-action/", expected_body)
+}
+
+func TestLatestMetaDataInstanceId(t *testing.T) {
+	expected_body := `i-asdfasdf`
+
+	doBodyTest(t, "/latest/meta-data/instance-id", expected_body)
+	doBodyTest(t, "/latest/meta-data/instance-id/", expected_body)
+}
+
+func TestLatestMetaDataInstanceType(t *testing.T) {
+	expected_body := `t2.micro`
+
+	doBodyTest(t, "/latest/meta-data/instance-type", expected_body)
+	doBodyTest(t, "/latest/meta-data/instance-type/", expected_body)
+}
+
+func TestLatestMetaDataLocalHostname(t *testing.T) {
+	expected_body := `testhostname`
+
+	doBodyTest(t, "/latest/meta-data/local-hostname", expected_body)
+	doBodyTest(t, "/latest/meta-data/local-hostname/", expected_body)
+}
+
+func TestLatestMetaDataLocalIpv4(t *testing.T) {
+	expected_body := `10.20.30.40`
+
+	doBodyTest(t, "/latest/meta-data/local-ipv4", expected_body)
+	doBodyTest(t, "/latest/meta-data/local-ipv4/", expected_body)
+}
+
+func TestLatestMetaDataMac(t *testing.T) {
+	expected_body := `00:aa:bb:cc:dd:ee`
+
+	doBodyTest(t, "/latest/meta-data/mac", expected_body)
+	doBodyTest(t, "/latest/meta-data/mac/", expected_body)
+}
+
+func TestLatestMetaDataMetrics(t *testing.T) {
+	expected_body := `vhostmd`
+
+	doRedirectTest(t, "/latest/meta-data/metrics", "/latest/meta-data/metrics/")
+	doBodyTest(t, "/latest/meta-data/metrics/", expected_body)
+}
+
+func TestLatestMetaDataMetricsVhostMd(t *testing.T) {
+	// No idea what actually lives here right now, leaving as a placeholder.
+	expected_body := `<?xml version="1.0" encoding="UTF-8"?>`
+
+	doBodyTest(t, "/latest/meta-data/metrics/vhostmd", expected_body)
+	doBodyTest(t, "/latest/meta-data/metrics/vhostmd/", expected_body)
+}
+
+func TestLatestMetaDataNetwork(t *testing.T) {
+	expected_body := `interfaces/`
+
+	doRedirectTest(t, "/latest/meta-data/network", "/latest/meta-data/network/")
+	doBodyTest(t, "/latest/meta-data/network/", expected_body)
+}
+
+func TestLatestMetaDataNetworkInterfaces(t *testing.T) {
+	expected_body := `macs/`
+
+	doRedirectTest(t, "/latest/meta-data/network/interfaces", "/latest/meta-data/network/interfaces/")
+	doBodyTest(t, "/latest/meta-data/network/interfaces/", expected_body)
+}
+
+func TestLatestMetaDataNetworkInterfacesMacs(t *testing.T) {
+	expected_body := `00:aa:bb:cc:dd:ee/`
+
+	doRedirectTest(t, "/latest/meta-data/network/interfaces/macs", "/latest/meta-data/network/interfaces/macs/")
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/", expected_body)
+}
+
+func TestLatestMetaDataNetworkInterfacesMacsAddr(t *testing.T) {
+	expected_body := `device-number
+interface-id
+ipv4-associations/
+local-hostname
+local-ipv4s
+mac
+owner-id
+public-hostname
+public-ipv4s
+security-group-ids
+security-groups
+subnet-id
+subnet-ipv4-cidr-block
+vpc-id
+vpc-ipv4-cidr-block
+vpc-ipv4-cidr-blocks`
+
+	doRedirectTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee", "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/")
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/", expected_body)
+}
+
+func TestLatestMetaDataNIMAddrDeviceNumber(t *testing.T) {
+	expected_body := `0`
+
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/device-number", expected_body)
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/device-number/", expected_body)
+}
+
+func TestLatestMetaDataNIMAddrInterfaceId(t *testing.T) {
+	expected_body := `eni-asdfasdf`
+
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/interface-id", expected_body)
+	doBodyTest(t, "/latest/meta-data/network/interfaces/macs/00:aa:bb:cc:dd:ee/interface-id/", expected_body)
+}
+
+// TODO: coverage for the network/interfaces/macs/mac_addr/... namespaces...
+
 func TestLatestUserData(t *testing.T) {
 	// TODO: /latest/user-data returns a 404 if none exists... or if one exists, will return it?
 	// should we expose this in the API? not implemented right now. could be useful...

@@ -99,24 +99,58 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 
 	m.Handle("/hostname", appHandler(app.hostnameHandler))
 	m.Handle("/hostname/", appHandler(app.hostnameHandler))
+
+	i := m.PathPrefix("/iam").Subrouter()
+	i.Handle("", appHandler(app.trailingSlashRedirect))
+	i.Handle("/", appHandler(app.iamHandler))
+	i.Handle("/info", appHandler(app.infoHandler))
+	i.Handle("/info/", appHandler(app.infoHandler))
+	isc := i.PathPrefix("/security-credentials").Subrouter()
+	isc.Handle("", appHandler(app.trailingSlashRedirect))
+	isc.Handle("/", appHandler(app.securityCredentialsHandler))
+	isc.Handle("/"+app.RoleName, appHandler(app.roleHandler))
+	isc.Handle("/"+app.RoleName+"/", appHandler(app.roleHandler))
+
+	m.Handle("/instance-action", appHandler(app.instanceActionHandler))
+	m.Handle("/instance-action/", appHandler(app.instanceActionHandler))
 	m.Handle("/instance-id", appHandler(app.instanceIDHandler))
 	m.Handle("/instance-id/", appHandler(app.instanceIDHandler))
+	m.Handle("/instance-type", appHandler(app.instanceTypeHandler))
+	m.Handle("/instance-type/", appHandler(app.instanceTypeHandler))
 	m.Handle("/local-hostname", appHandler(app.localHostnameHandler))
 	m.Handle("/local-hostname/", appHandler(app.localHostnameHandler))
 	m.Handle("/local-ipv4", appHandler(app.privateIpHandler))
 	m.Handle("/local-ipv4/", appHandler(app.privateIpHandler))
+	m.Handle("/mac", appHandler(app.macHandler))
+	m.Handle("/mac/", appHandler(app.macHandler))
+
+	n := m.PathPrefix("/network").Subrouter()
+	n.Handle("", appHandler(app.trailingSlashRedirect))
+	n.Handle("/", appHandler(app.networkHandler))
+	ni := n.PathPrefix("/interfaces").Subrouter()
+	ni.Handle("", appHandler(app.trailingSlashRedirect))
+	ni.Handle("/", appHandler(app.networkInterfacesHandler))
+	nim := ni.PathPrefix("/macs").Subrouter()
+	nim.Handle("", appHandler(app.trailingSlashRedirect))
+	nim.Handle("/", appHandler(app.networkInterfacesMacsHandler))
+	nimaddr := nim.PathPrefix("/" + app.MacAddress).Subrouter()
+	nimaddr.Handle("", appHandler(app.trailingSlashRedirect))
+	nimaddr.Handle("/", appHandler(app.networkInterfacesMacsAddrHandler))
+	nimaddr.Handle("/device-number", appHandler(app.nimAddrDeviceNumberHandler))
+	nimaddr.Handle("/device-number/", appHandler(app.nimAddrDeviceNumberHandler))
+	nimaddr.Handle("/interface-id", appHandler(app.nimAddrInterfaceIdHandler))
+	nimaddr.Handle("/interface-id/", appHandler(app.nimAddrInterfaceIdHandler))
+	// TODO: expand API coverage
+	nimaddr.Handle("/vpc-id", appHandler(app.vpcHandler))
+
+	me := m.PathPrefix("/metrics").Subrouter()
+	me.Handle("", appHandler(app.trailingSlashRedirect))
+	me.Handle("/", appHandler(app.metricsHandler))
+	me.Handle("/vhostmd", appHandler(app.metricsVhostmdHandler))
+	me.Handle("/vhostmd/", appHandler(app.metricsVhostmdHandler))
 
 	p := m.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
-
-	i := m.PathPrefix("/iam").Subrouter()
-	i.Handle("/security-credentials", appHandler(app.trailingSlashRedirect))
-	i.Handle("/security-credentials/", appHandler(app.securityCredentialsHandler))
-	i.Handle("/security-credentials/"+app.RoleName, appHandler(app.roleHandler))
-
-	n := m.PathPrefix("/network/interfaces").Subrouter()
-	n.Handle("/macs", appHandler(app.macHandler))
-	n.Handle("/macs/"+app.Hostname+"/vpc-id", appHandler(app.vpcHandler))
 
 	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -138,6 +172,16 @@ func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) rootHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, strings.Join(app.apiVersionPrefixes(), "\n"))
+}
+
+func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
+	location := ""
+	if app.NoSchemeHostRedirects == false {
+		location = "http://169.254.169.254"
+	}
+	location = fmt.Sprintf("%s%s/", location, r.URL.String())
+	w.Header().Set("Location", location)
+	w.WriteHeader(301)
 }
 
 func (app *App) secondLevelHandler(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +229,7 @@ func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.R
 		Version:            "2010-08-31",
 		InstanceId:         app.InstanceID,
 		BillingProducts:    nil,
-		InstanceType:       "t2.micro",
+		InstanceType:       app.InstanceType,
 		AccountId:          "1234567890",
 		ImageId:            app.AmiID,
 		PendingTime:        "2016-04-15T12:14:15Z",
@@ -266,8 +310,30 @@ func (app *App) hostnameHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.Hostname)
 }
 
+func (app *App) iamHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `info
+security-credentials/`)
+}
+
+func (app *App) infoHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `{
+  "Code" : "Success",
+  "LastUpdated" : "2018-02-26T23:50:00Z",
+  "InstanceProfileArn" : "arn:aws:iam::123456789012:instance-profile/some-instance-profile",
+  "InstanceProfileId" : "some-instance-profile-id"
+}`)
+}
+
+func (app *App) instanceActionHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `none`)
+}
+
 func (app *App) instanceIDHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.InstanceID)
+}
+
+func (app *App) instanceTypeHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.InstanceType)
 }
 
 func (app *App) localHostnameHandler(w http.ResponseWriter, r *http.Request) {
@@ -278,6 +344,27 @@ func (app *App) privateIpHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.PrivateIp)
 }
 
+func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.MacAddress)
+}
+
+func (app *App) metricsHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `vhostmd`)
+}
+
+func (app *App) metricsVhostmdHandler(w http.ResponseWriter, r *http.Request) {
+	// No idea what actually lives here right now, leaving as a placeholder.
+	write(w, `<?xml version="1.0" encoding="UTF-8"?>`)
+}
+
+func (app *App) networkHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `interfaces/`)
+}
+
+func (app *App) networkInterfacesHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `macs/`)
+}
+
 func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.AvailabilityZone)
 }
@@ -286,18 +373,35 @@ func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Reques
 	write(w, app.RoleName)
 }
 
-func (app *App) trailingSlashRedirect(w http.ResponseWriter, r *http.Request) {
-	location := ""
-	if app.NoSchemeHostRedirects == false {
-		location = "http://169.254.169.254"
-	}
-	location = fmt.Sprintf("%s%s/", location, r.URL.String())
-	w.Header().Set("Location", location)
-	w.WriteHeader(301)
+func (app *App) networkInterfacesMacsHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.MacAddress+"/")
 }
 
-func (app *App) macHandler(w http.ResponseWriter, r *http.Request) {
-	write(w, app.Hostname+"/")
+func (app *App) networkInterfacesMacsAddrHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `device-number
+interface-id
+ipv4-associations/
+local-hostname
+local-ipv4s
+mac
+owner-id
+public-hostname
+public-ipv4s
+security-group-ids
+security-groups
+subnet-id
+subnet-ipv4-cidr-block
+vpc-id
+vpc-ipv4-cidr-block
+vpc-ipv4-cidr-blocks`)
+}
+
+func (app *App) nimAddrDeviceNumberHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `0`)
+}
+
+func (app *App) nimAddrInterfaceIdHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, `eni-asdfasdf`)
 }
 
 func (app *App) vpcHandler(w http.ResponseWriter, r *http.Request) {

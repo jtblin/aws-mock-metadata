@@ -20,7 +20,10 @@ func TestMain(m *testing.M) {
 	// AppPort not required
 	app.Hostname = "testhostname"
 	app.InstanceID = "i-asdfasdf"
+	app.InstanceType = "t2.micro"
+	app.MacAddress = "00:aa:bb:cc:dd:ee"
 	app.PrivateIp = "10.20.30.40"
+	app.RoleName = "some-instance-profile"
 	// No RoleArn or RoleName needed for current test coverage
 	app.VpcID = "vpc-asdfasdf"
 	testServer = httptest.NewServer(app.NewServer())
