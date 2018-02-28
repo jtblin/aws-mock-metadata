@@ -10,14 +10,16 @@ import (
 // App encapsulates all of the parameters necessary for starting up
 // an aws mock metadata server. These can either be set via command line or directly.
 type App struct {
-	AmiID                 string
-	AvailabilityZone      string
-	AppPort               string
-	Hostname              string
-	InstanceID            string
-	InstanceType          string
-	MacAddress            string
-	PrivateIp             string
+	AmiID            string
+	AvailabilityZone string
+	AppPort          string
+	Hostname         string
+	InstanceID       string
+	InstanceType     string
+	MacAddress       string
+	PrivateIp        string
+	// If set, will return mocked credentials to the IAM instance profile instead of using STS to retrieve real credentials.
+	MockInstanceProfile   bool
 	RoleArn               string
 	RoleName              string
 	Verbose               bool
@@ -47,6 +49,7 @@ func (app *App) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&app.InstanceType, "instance-type", app.InstanceType, "EC2 Instance Type")
 	fs.StringVar(&app.MacAddress, "mac-address", app.MacAddress, "ENI MAC Address")
 	fs.StringVar(&app.PrivateIp, "private-ip", app.PrivateIp, "ENI Private IP")
+	fs.BoolVar(&app.MockInstanceProfile, "mock-instance-profile", false, "Use mocked IAM Instance Profile credentials (instead of STS generated credentials)")
 	fs.StringVar(&app.RoleArn, "role-arn", app.RoleArn, "IAM Role ARN")
 	fs.StringVar(&app.RoleName, "role-name", app.RoleName, "IAM Role Name")
 	fs.BoolVar(&app.Verbose, "verbose", false, "Verbose")

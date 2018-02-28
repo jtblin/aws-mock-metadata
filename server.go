@@ -110,8 +110,13 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	isc := i.PathPrefix("/security-credentials").Subrouter()
 	isc.Handle("", appHandler(app.trailingSlashRedirect))
 	isc.Handle("/", appHandler(app.securityCredentialsHandler))
-	isc.Handle("/"+app.RoleName, appHandler(app.roleHandler))
-	isc.Handle("/"+app.RoleName+"/", appHandler(app.roleHandler))
+	if app.MockInstanceProfile == true {
+		isc.Handle("/"+app.RoleName, appHandler(app.mockRoleHandler))
+		isc.Handle("/"+app.RoleName+"/", appHandler(app.mockRoleHandler))
+	} else {
+		isc.Handle("/"+app.RoleName, appHandler(app.roleHandler))
+		isc.Handle("/"+app.RoleName+"/", appHandler(app.roleHandler))
+	}
 
 	m.Handle("/instance-action", appHandler(app.instanceActionHandler))
 	m.Handle("/instance-action/", appHandler(app.instanceActionHandler))
@@ -214,22 +219,21 @@ signature
 `)
 }
 
-// NOTE: order of keys here differs from real metadata service, in theory most (proper) JSON parsers should be fine with it though...
 type InstanceIdentityDocument struct {
-	AvailabilityZone   string  `json:"availabilityZone"`
-	Region             string  `json:"region"`
-	DevpayProductCodes *string `json:"devpayProductCodes"`
-	PrivateIp          string  `json:"privateIp"`
-	Version            string  `json:"version"`
 	InstanceId         string  `json:"instanceId"`
 	BillingProducts    *string `json:"billingProducts"`
+	ImageId            string  `json:"imageId"`
+	Architecture       string  `json:"architecture"`
+	PendingTime        string  `json:"pendingTime"`
 	InstanceType       string  `json:"instanceType"`
 	AccountId          string  `json:"accountId"`
-	ImageId            string  `json:"imageId"`
-	PendingTime        string  `json:"pendingTime"`
-	Architecture       string  `json:"architecture"`
 	KernelId           *string `json:"kernelId"`
 	RamdiskId          *string `json:"ramdiskId"`
+	Region             string  `json:"region"`
+	Version            string  `json:"version"`
+	AvailabilityZone   string  `json:"availabilityZone"`
+	DevpayProductCodes *string `json:"devpayProductCodes"`
+	PrivateIp          string  `json:"privateIp"`
 }
 
 func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.Request) {
@@ -242,29 +246,33 @@ func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.R
 		InstanceId:         app.InstanceID,
 		BillingProducts:    nil,
 		InstanceType:       app.InstanceType,
-		AccountId:          "1234567890",
+		AccountId:          "123456789012",
 		ImageId:            app.AmiID,
 		PendingTime:        "2016-04-15T12:14:15Z",
 		Architecture:       "x86_64",
 		KernelId:           nil,
 		RamdiskId:          nil,
 	}
-	if err := json.NewEncoder(w).Encode(document); err != nil {
-		log.Errorf("Error sending json %+v", err)
+	result, err := json.MarshalIndent(document, "", "  ")
+	if err != nil {
+		log.Errorf("Error marshalling json %+v", err)
 		http.Error(w, err.Error(), 500)
 	}
+	write(w, string(result))
 }
 
+// We cannot impersonate AWS and generate matching signatures here.
+// Just return placeholder data instead.
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 func (app *App) instanceIdentityPkcs7Handler(w http.ResponseWriter, r *http.Request) {
-	// TODO: adjust output to suit
-	write(w, `
-`)
+	write(w, `PKCS7`)
 }
 
+// We cannot impersonate AWS and generate matching signatures here.
+// Just return placeholder data instead.
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
 func (app *App) instanceIdentitySignatureHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: adjust output to suit
-	write(w, `
-`)
+	write(w, `SIGNATURE`)
 }
 
 func (app *App) metaDataHandler(w http.ResponseWriter, r *http.Request) {
@@ -433,6 +441,22 @@ type Credentials struct {
 	SecretAccessKey string
 	Token           string
 	Expiration      string
+}
+
+func (app *App) mockRoleHandler(w http.ResponseWriter, r *http.Request) {
+	// TODOLATER: round to nearest hour, to ensure test coverage passes more reliably?
+	now := time.Now().UTC()
+	expire := now.Add(6 * time.Hour)
+	format := "2006-01-02T15:04:05Z"
+	write(w, fmt.Sprintf(`{
+  "Code" : "Success",
+  "LastUpdated" : "%s",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "mock-access-key-id",
+  "SecretAccessKey" : "mock-secret-access-key",
+  "Token" : "mock-token",
+  "Expiration" : "%s"
+}`, now.Format(format), expire.Format(format)))
 }
 
 func (app *App) roleHandler(w http.ResponseWriter, r *http.Request) {
