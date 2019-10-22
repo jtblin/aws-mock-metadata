@@ -164,6 +164,11 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	m.Handle("/public-hostname", appHandler(app.hostnameHandler))
 	m.Handle("/public-hostname/", appHandler(app.hostnameHandler))
 
+	if app.MockSpotTermination {
+		s := m.PathPrefix("/spot").Subrouter()
+		s.Handle("/termination-time", appHandler(app.terimationTimeHandler))
+	}
+
 	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	ii.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -177,6 +182,11 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	nim.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	nimaddr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	p.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+}
+
+func (app *App) terimationTimeHandler(w http.ResponseWriter, r *http.Request) {
+	date := fmt.Sprintf("%s", time.Now())
+	write(w, date)
 }
 
 type appHandler func(http.ResponseWriter, *http.Request)
