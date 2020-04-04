@@ -53,11 +53,7 @@ http://stackoverflow.com/questions/21956794/aws-assumerole-authorization-not-wor
 
 ### Dependencies
 
-You need to have go installed locally.
-
-Install Godep
-
-    go get github.com/tools/godep
+Uses Go Modules, ensure you have Go 1.13.x or later installed.
 
 ### Run
 
