@@ -1,0 +1,14 @@
+github.com/Sirupsen/logrus v0.8.7-0.20150819001102-27b713cfd274 h1:/aSceqBlGxiLVsM73EddqCYhdG+pRQ1WgXfQipjpwsY=
+github.com/Sirupsen/logrus v0.8.7-0.20150819001102-27b713cfd274/go.mod h1:rmk17hk6i8ZSAJkSDa7nOxamrG+SP4P0mm+DAvExv4U=
+github.com/aws/aws-sdk-go v1.0.1-0.20151120233444-328e030f73f6 h1:8nFxKtXa75GNqQSvcBHMbUT/7eLKItX84PDEu3UFQDw=
+github.com/aws/aws-sdk-go v1.0.1-0.20151120233444-328e030f73f6/go.mod h1:ZRmQr0FajVIyZ4ZzBYKG5P3ZqPz9IHG41ZoMu1ADI3k=
+github.com/go-ini/ini v0.0.0-20151119163333-2e44421e256d h1:xotg2DEmHEKIFEnwcEJJ2oF8PKY4tJazyGKl/ih8n2A=
+github.com/go-ini/ini v0.0.0-20151119163333-2e44421e256d/go.mod h1:ByCAeIL28uOIIG0E3PJtZPDL8WnHpFKFOtgjp+3Ies8=
+github.com/gorilla/context v0.0.0-20150820051245-1c83b3eabd45 h1:f69IpTg7NxbCoH51W7oD+gPkojLLvi6ybJ6Iya76wB8=
+github.com/gorilla/context v0.0.0-20150820051245-1c83b3eabd45/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
+github.com/gorilla/mux v0.0.0-20150820051506-ee1815431e49 h1:TLnbpfGCPcEmjJUaeg2ZWCTSjwYGOEBRzLO+szbm0lc=
+github.com/gorilla/mux v0.0.0-20150820051506-ee1815431e49/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/jmespath/go-jmespath v0.0.0-20151117175822-3433f3ea46d9 h1:1SlajWtS+u/6x2Be5vrHyrbSxkeIf/+ISBu//kmjpnc=
+github.com/jmespath/go-jmespath v0.0.0-20151117175822-3433f3ea46d9/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
+github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
