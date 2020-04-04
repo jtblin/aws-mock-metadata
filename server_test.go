@@ -84,7 +84,7 @@ func TestLatest(t *testing.T) {
 meta-data
 user-data`
 
-	doRedirectTest(t, "/latest", "/latest/")
+	doBodyTest(t, "/latest", expected_body)
 	doBodyTest(t, "/latest/", expected_body)
 }
 

@@ -52,8 +52,7 @@ func (app *App) NewServer() *mux.Router {
 	r.Handle("/", appHandler(app.rootHandler))
 
 	for _, v := range app.apiVersionPrefixes() {
-		d := r.PathPrefix(fmt.Sprintf("/%s", v)).Subrouter()
-		app.versionSubRouter(d, v)
+		app.versionSubRouter(r.PathPrefix(fmt.Sprintf("/%s", v)).Subrouter(), v)
 	}
 
 	r.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -64,7 +63,8 @@ func (app *App) NewServer() *mux.Router {
 // Provides the versioned (normally 1.0, YYYY-MM-DD or latest) prefix routes
 // TODO: conditional out the namespaces that don't exist on selected API versions
 func (app *App) versionSubRouter(sr *mux.Router, version string) {
-	sr.Handle("", appHandler(app.trailingSlashRedirect))
+	//sr.Handle("", appHandler(app.trailingSlashRedirect))
+	sr.Handle("", appHandler(app.secondLevelHandler))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
 
 	d := sr.PathPrefix("/dynamic").Subrouter()
