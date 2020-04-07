@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -66,6 +68,23 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	//sr.Handle("", appHandler(app.trailingSlashRedirect))
 	sr.Handle("", appHandler(app.secondLevelHandler))
 	sr.Handle("/", appHandler(app.secondLevelHandler))
+
+	// For IMDSv2, https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
+	a := sr.PathPrefix("/api").Subrouter()
+	a.Handle("", appHandler(app.notFoundHandler))
+	a.Handle("/", appHandler(app.notFoundHandler))
+	a.Handle("/token", appHandler(app.apiTokenHandler)).Methods("PUT")
+	// TODO: return 405 for everything but PUT
+	/*
+		HTTP/1.1 405 Not Allowed
+		Allow: OPTIONS, PUT
+		Content-Length: 0
+		Date: Tue, 07 Apr 2020 03:56:56 GMT
+		Server: EC2ws
+		Connection: close
+		Content-Type: text/plain
+	*/
+	a.Handle("/token", appHandler(app.apiTokenNotPutHandler)).Methods("GET", "POST", "DELETE")
 
 	d := sr.PathPrefix("/dynamic").Subrouter()
 	d.Handle("", appHandler(app.trailingSlashRedirect))
@@ -165,6 +184,7 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 	m.Handle("/public-hostname/", appHandler(app.hostnameHandler))
 
 	sr.Handle("/{path:.*}", appHandler(app.notFoundHandler))
+	a.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	d.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	ii.Handle("/{path:.*}", appHandler(app.notFoundHandler))
 	m.Handle("/{path:.*}", appHandler(app.notFoundHandler))
@@ -210,6 +230,33 @@ user-data`)
 func (app *App) dynamicHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, `instance-identity/
 `)
+}
+
+func (app *App) apiTokenNotPutHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Allow", "OPTIONS, PUT")
+	w.WriteHeader(405)
+}
+
+// NOTE: no API methods actually check the X-aws-ec2-metadata-token request header right now...
+func (app *App) apiTokenHandler(w http.ResponseWriter, r *http.Request) {
+	// Check for X-aws-ec2-metadata-token-ttl-seconds request header
+	if r.Header.Get("X-aws-ec2-metadata-token-ttl-seconds") == "" {
+		// Not set, 400 Bad Request
+		w.WriteHeader(400)
+	}
+
+	// Check X-aws-ec2-metadata-token-ttl-seconds is an integer
+	seconds_int, err := strconv.Atoi(r.Header.Get("X-aws-ec2-metadata-token-ttl-seconds"))
+	if err != nil {
+		log.Errorf("apiTokenHandler: Error converting X-aws-ec2-metadata-token-ttl-seconds to integer: %+v", err)
+		w.WriteHeader(400)
+	}
+
+	// Generate a token, 40 character string, base64 encoded
+	token := base64.StdEncoding.EncodeToString([]byte(RandStringBytesMaskImprSrc(40)))
+
+	w.Header().Set("X-Aws-Ec2-Metadata-Token-Ttl-Seconds", strconv.Itoa(seconds_int))
+	write(w, token)
 }
 
 func (app *App) instanceIdentityHandler(w http.ResponseWriter, r *http.Request) {
