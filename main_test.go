@@ -21,6 +21,7 @@ func TestMain(m *testing.M) {
 	app.Hostname = "testhostname"
 	app.InstanceID = "i-asdfasdf"
 	app.InstanceType = "t2.micro"
+	app.AccountID = "123456789012"
 	app.MacAddress = "00:aa:bb:cc:dd:ee"
 	app.MockInstanceProfile = true
 	app.PrivateIp = "10.20.30.40"

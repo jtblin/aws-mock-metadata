@@ -15,6 +15,7 @@ type App struct {
 	AppPort          string
 	Hostname         string
 	InstanceID       string
+	AccountID        string
 	InstanceType     string
 	MacAddress       string
 	PrivateIp        string
@@ -47,6 +48,7 @@ func (app *App) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&app.Hostname, "hostname", app.Hostname, "EC2 Instance Hostname")
 	fs.StringVar(&app.InstanceID, "instance-id", app.InstanceID, "EC2 Instance ID")
 	fs.StringVar(&app.InstanceType, "instance-type", app.InstanceType, "EC2 Instance Type")
+	fs.StringVar(&app.AccountID, "account-id", app.AccountID, "AWS Account ID")
 	fs.StringVar(&app.MacAddress, "mac-address", app.MacAddress, "ENI MAC Address")
 	fs.StringVar(&app.PrivateIp, "private-ip", app.PrivateIp, "ENI Private IP")
 	fs.BoolVar(&app.MockInstanceProfile, "mock-instance-profile", false, "Use mocked IAM Instance Profile credentials (instead of STS generated credentials)")

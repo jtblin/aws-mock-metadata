@@ -293,7 +293,7 @@ func (app *App) instanceIdentityDocumentHandler(w http.ResponseWriter, r *http.R
 		InstanceId:         app.InstanceID,
 		BillingProducts:    nil,
 		InstanceType:       app.InstanceType,
-		AccountId:          "123456789012",
+		AccountId:          app.AccountID,
 		ImageId:            app.AmiID,
 		PendingTime:        "2016-04-15T12:14:15Z",
 		Architecture:       "x86_64",
