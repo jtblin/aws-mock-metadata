@@ -177,6 +177,7 @@ func (app *App) versionSubRouter(sr *mux.Router, version string) {
 
 	p := m.PathPrefix("/placement").Subrouter()
 	p.Handle("/availability-zone", appHandler(app.availabilityZoneHandler))
+	p.Handle("/region", appHandler(app.regionHandler))
 
 	m.Handle("/profile", appHandler(app.profileHandler))
 	m.Handle("/profile/", appHandler(app.profileHandler))
@@ -434,6 +435,10 @@ func (app *App) networkInterfacesHandler(w http.ResponseWriter, r *http.Request)
 
 func (app *App) availabilityZoneHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, app.AvailabilityZone)
+}
+
+func (app *App) regionHandler(w http.ResponseWriter, r *http.Request) {
+	write(w, app.AvailabilityZone[:len(app.AvailabilityZone)-1])
 }
 
 func (app *App) securityCredentialsHandler(w http.ResponseWriter, r *http.Request) {
