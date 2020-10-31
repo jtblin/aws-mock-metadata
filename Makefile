@@ -15,7 +15,7 @@ build: *.go
 	gofmt -w=true .
 	go build -o bin/aws-mock-metadata $(GOBUILD_VERSION_ARGS) github.com/jtblin/aws-mock-metadata
 
-test: check
+test: build
 	go test
 
 junit-test: build
