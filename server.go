@@ -18,8 +18,8 @@ import (
 
 // StartServer starts a newly created http server
 func (app *App) StartServer() {
-	log.Infof("Listening on port %s", app.AppPort)
-	if err := http.ListenAndServe(":"+app.AppPort, app.NewServer()); err != nil {
+	log.Infof("Listening on port %s:%s", app.AppInterface, app.AppPort)
+	if err := http.ListenAndServe(app.AppInterface+":"+app.AppPort, app.NewServer()); err != nil {
 		log.Fatalf("Error creating http server: %+v", err)
 	}
 }

@@ -12,6 +12,7 @@ import (
 type App struct {
 	AmiID            string
 	AvailabilityZone string
+	AppInterface     string
 	AppPort          string
 	Hostname         string
 	InstanceID       string
@@ -44,6 +45,7 @@ func main() {
 func (app *App) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&app.AmiID, "ami-id", app.AmiID, "EC2 Instance AMI ID")
 	fs.StringVar(&app.AvailabilityZone, "availability-zone", app.AvailabilityZone, "Availability Zone")
+	fs.StringVar(&app.AppInterface, "app-interface", app.AppInterface, "HTTP Network Interface")
 	fs.StringVar(&app.AppPort, "app-port", app.AppPort, "HTTP Port")
 	fs.StringVar(&app.Hostname, "hostname", app.Hostname, "EC2 Instance Hostname")
 	fs.StringVar(&app.InstanceID, "instance-id", app.InstanceID, "EC2 Instance ID")
