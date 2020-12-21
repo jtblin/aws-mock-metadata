@@ -25,6 +25,7 @@ type App struct {
 	Verbose               bool
 	VpcID                 string
 	NoSchemeHostRedirects bool
+	MockSpotTermination   bool
 }
 
 func main() {
@@ -55,4 +56,5 @@ func (app *App) addFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&app.Verbose, "verbose", false, "Verbose")
 	fs.StringVar(&app.VpcID, "vpc-id", app.VpcID, "VPC ID")
 	fs.BoolVar(&app.NoSchemeHostRedirects, "no-scheme-host-redirects", app.NoSchemeHostRedirects, "Disable the scheme://host prefix in Location redirect headers")
+	fs.BoolVar(&app.MockSpotTermination, "mock-spot-termination", false, "Use to set a date in spot/termination-date")
 }
